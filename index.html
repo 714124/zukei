@@ -1,98 +1,17 @@
-import React, { useState, useEffect, useCallback } from 'react';
-import { Trophy, RefreshCcw, Volume2, Lightbulb } from 'lucide-react';
-
-const App = () => {
-  const [currentStep, setCurrentStep] = useState('start');
-  const [quizSet, setQuizSet] = useState([]);
-  const [questionIndex, setQuestionIndex] = useState(0);
-  const [score, setScore] = useState(0);
-  const [feedback, setFeedback] = useState(null);
-  const [isLocked, setIsLocked] = useState(false);
-  const [showHint, setShowHint] = useState(false);
-
-  // 全10問のデータ
-  const allQuestions = [
-    { question: 'この 形の 名前は 何かな？', visual: { type: 'shape', value: 'circle' }, options: ['まる', 'さんかく', 'しかく', 'おほしさま'], answer: 'まる', hint: 'おつきさまや ドーナツと おなじだよ' },
-    { question: '「しかく」は どれかな？', visual: { type: 'text', value: 'どれかな？' }, options: ['△', '〇', '□', '☆'], answer: '□', hint: 'カドが 4つ あるものを さがしてね' },
-    { question: 'おにぎりと 同じ 形は どれかな？', visual: { type: 'emoji', value: '🍙' }, options: ['まる', 'さんかく', 'しかく', 'おはな'], answer: 'さんかく', hint: 'カドが 3つ あるよ' },
-    { question: 'さんかくを 2つ あわせると？', visual: { type: 'composition', value: '▲▲' }, options: ['まる', 'しかく', 'おほしさま', 'なみなみ'], answer: 'しかく', hint: 'サンドイッチを 2つ くっつけると…？' },
-    { question: 'ドーナツと 同じ 形は どれ？', visual: { type: 'emoji', value: '🍩' }, options: ['〇', '△', '□', '☆'], answer: '〇', hint: 'あなが あいた まるだね' },
-    { question: '「まる」は どれかな？', visual: { type: 'text', value: 'さがしてみてね' }, options: ['□', '△', '〇', '☆'], answer: '〇', hint: 'カドがない つるつるの 形だよ' },
-    { question: '「さんかく」を さがそう！', visual: { type: 'text', value: 'どれかな？' }, options: ['〇', '□', '☆', '△'], answer: '△', hint: 'ヨットの ほや、おやまの 形だよ' },
-    { question: 'テレビと 同じ 形は どれ？', visual: { type: 'emoji', value: '📺' }, options: ['しかく', 'まる', 'さんかく', 'おはな'], answer: 'しかく', hint: 'ま四角い かたちだね' },
-    { question: '「はんぶんの まる」は どれかな？', visual: { type: 'text', value: 'スイカの かたち' }, options: ['〇', 'D', '△', '□'], answer: 'D', hint: 'まるを まん中で きったよ' },
-    { question: 'しかくを 2つ つなげると？', visual: { type: 'composition', value: '■■' }, options: ['ながい しかく', 'まる', 'さんかく', 'ばつ'], answer: 'ながい しかく', hint: 'バスや でんしゃの かたちだね' }
-  ];
-
-  const playSound = useCallback((type) => {
-    try {
-      const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-      const oscillator = audioCtx.createOscillator();
-      const gainNode = audioCtx.createGain();
-      oscillator.connect(gainNode);
-      gainNode.connect(audioCtx.destination);
-
-      if (type === 'correct') {
-        oscillator.frequency.setValueAtTime(523.25, audioCtx.currentTime);
-        oscillator.frequency.exponentialRampToValueAtTime(880, audioCtx.currentTime + 0.1);
-        gainNode.gain.setValueAtTime(0.3, audioCtx.currentTime);
-      } else if (type === 'incorrect') {
-        oscillator.type = 'sawtooth';
-        oscillator.frequency.setValueAtTime(200, audioCtx.currentTime);
-        gainNode.gain.setValueAtTime(0.2, audioCtx.currentTime);
-      } else {
-        oscillator.frequency.setValueAtTime(440, audioCtx.currentTime);
-        gainNode.gain.setValueAtTime(0.1, audioCtx.currentTime);
-      }
-      oscillator.start();
-      oscillator.stop(audioCtx.currentTime + (type === 'correct' ? 0.4 : 0.2));
-    } catch (e) {
-      console.log('Audio not supported or interaction needed');
-    }
-  }, []);
-
-  const startNewQuiz = () => {
-    playSound('click');
-    const shuffled = [...allQuestions].sort(() => Math.random() - 0.5);
-    setQuizSet(shuffled.slice(0, 5));
-    setQuestionIndex(0);
-    setScore(0);
-    setFeedback(null);
-    setIsLocked(false);
-    setShowHint(false);
-    setCurrentStep('quiz');
-  };
-
-  const handleAnswer = (option) => {
-    if (isLocked) return;
-    setIsLocked(true);
-    const isCorrect = option === quizSet[questionIndex].answer;
-    
-    if (isCorrect) {
-      setScore(s => s + 1);
-      setFeedback('correct');
-      playSound('correct');
-    } else {
-      setFeedback('incorrect');
-      playSound('incorrect');
-    }
-
-    setTimeout(() => {
-      setFeedback(null);
-      setShowHint(false);
-      if (questionIndex < quizSet.length - 1) {
-        setQuestionIndex(i => i + 1);
-        setIsLocked(false);
-      } else {
-        setCurrentStep('result');
-      }
-    }, 1500);
-  };
-
-  return (
-    <div className="min-h-screen bg-sky-200 flex flex-col items-center justify-center p-4 font-sans text-gray-800 relative overflow-hidden">
-      {/* 背景装飾アニメーション */}
-      <style>{`
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>たのしい図形クイズ</title>
+    <!-- ライブラリの読み込み -->
+    <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <style>
         @keyframes float { 0%, 100% { transform: translateY(0) rotate(0); } 50% { transform: translateY(-20px) rotate(10deg); } }
         @keyframes float-delayed { 0%, 100% { transform: translateY(0) rotate(0); } 50% { transform: translateY(-20px) rotate(-10deg); } }
         @keyframes yellow-pulse { 0%, 100% { transform: scale(1); filter: drop-shadow(0 0 0px #fbbf24); } 50% { transform: scale(1.1); filter: drop-shadow(0 0 30px #fbbf24); } }
@@ -101,143 +20,179 @@ const App = () => {
         .animate-float-delayed { animation: float-delayed 5s infinite ease-in-out; animation-delay: 1s; }
         .animate-yellow-pulse { animation: yellow-pulse 2s infinite ease-in-out; }
         .animate-shake { animation: shake 0.15s ease-in-out 0s 2; }
-      `}</style>
+    </style>
+</head>
+<body class="bg-sky-200">
+    <div id="root"></div>
 
-      <div className="absolute top-[10%] left-[5%] text-6xl animate-float opacity-50">😊🟡</div>
-      <div className="absolute top-[20%] right-[10%] text-6xl animate-float-delayed opacity-50">😊🟥</div>
-      <div className="absolute bottom-[15%] left-[10%] text-6xl animate-float opacity-50">😊🔺</div>
+    <script type="text/babel">
+        const { useState, useEffect, useCallback } = React;
 
-      <div className="w-full max-w-2xl bg-yellow-50 rounded-[3rem] shadow-2xl overflow-hidden border-[10px] border-white relative z-10">
-        
-        {/* スタート画面 */}
-        {currentStep === 'start' && (
-          <div className="p-8 md:p-12 text-center space-y-8">
-            <h1 className="text-4xl md:text-6xl font-black text-pink-500 tracking-tight">たのしい図形クイズ</h1>
-            <p className="text-2xl md:text-3xl font-bold text-sky-500">まる・さんかく・しかく</p>
-            <div className="bg-white rounded-full p-10 shadow-inner border-4 border-dashed border-sky-300 inline-block">
-              <div className="text-8xl animate-bounce">😊🟡</div>
-            </div>
-            <div>
-              <button 
-                onClick={startNewQuiz} 
-                className="bg-orange-400 hover:bg-orange-500 text-white text-3xl md:text-4xl font-black py-6 px-12 rounded-full shadow-[0_8px_0_rgb(194,120,0)] transform active:translate-y-2 active:shadow-none transition-all"
-              >
-                はじめる！
-              </button>
-            </div>
-          </div>
-        )}
+        // SVGアイコンを手動で定義（Lucide CDNの不具合対策）
+        const TrophyIcon = () => (
+            <svg xmlns="http://www.w3.org/2000/svg" width="80" height="80" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-yellow-400 animate-yellow-pulse mx-auto"><path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6"/><path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18"/><path d="M4 22h16"/><path d="M10 14.66V17c0 .55-.47.98-.97 1.21C7.85 18.75 7 20.24 7 22"/><path d="M14 14.66V17c0 .55.47.98.97 1.21C16.15 18.75 17 20.24 17 22"/><path d="M18 2H6v7a6 6 0 0 0 12 0V2Z"/></svg>
+        );
 
-        {/* クイズ画面 */}
-        {currentStep === 'quiz' && (
-          <div className="p-6 md:p-8 relative">
-            <div className="flex justify-between items-center mb-4 px-2 font-bold text-blue-400">
-              <span className="text-xl">{questionIndex + 1} / 5</span>
-              <div className="flex gap-2">
-                {[...Array(5)].map((_, i) => (
-                  <div key={i} className={`w-4 h-4 rounded-full border-2 border-white ${i <= questionIndex ? 'bg-orange-400' : 'bg-white'}`} />
-                ))}
-              </div>
-            </div>
+        const RefreshIcon = () => (
+            <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 12a9 9 0 0 0-9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/><path d="M3 12a9 9 0 0 0 9 9 9.75 9.75 0 0 0 6.74-2.74L21 16"/><path d="M16 16h5v5"/></svg>
+        );
 
-            <div className="bg-white rounded-[2rem] p-6 shadow-md mb-6 border-4 border-sky-100 text-center relative">
-              <h2 className="text-2xl md:text-3xl font-bold leading-tight text-blue-700">
-                {quizSet[questionIndex].question}
-              </h2>
-              {/* ヒントボタン */}
-              <button 
-                onClick={() => {setShowHint(!showHint); playSound('click');}}
-                className={`absolute -top-4 -right-2 p-2 rounded-full shadow-lg transition-colors ${showHint ? 'bg-yellow-400 text-white' : 'bg-white text-yellow-400'}`}
-              >
-                <Lightbulb size={24} />
-              </button>
-            </div>
+        const LightbulbIcon = () => (
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M15 14c.2-1 .7-1.7 1.5-2.5 1-.9 1.5-2.2 1.5-3.5A5 5 0 0 0 8 8c0 1.3.5 2.6 1.5 3.5.8.8 1.3 1.5 1.5 2.5"/><path d="M9 18h6"/><path d="M10 22h4"/></svg>
+        );
 
-            {/* ヒント表示 */}
-            {showHint && (
-              <div className="mb-4 bg-yellow-100 border-2 border-yellow-200 p-3 rounded-2xl text-center text-yellow-700 font-bold animate-fade-in">
-                💡 {quizSet[questionIndex].hint}
-              </div>
-            )}
+        const App = () => {
+            const [currentStep, setCurrentStep] = useState('start');
+            const [quizSet, setQuizSet] = useState([]);
+            const [questionIndex, setQuestionIndex] = useState(0);
+            const [score, setScore] = useState(0);
+            const [feedback, setFeedback] = useState(null);
+            const [isLocked, setIsLocked] = useState(false);
+            const [showHint, setShowHint] = useState(false);
 
-            <div className="flex justify-center mb-8 h-40 md:h-52 items-center bg-white bg-opacity-60 rounded-3xl border-4 border-white">
-              <div className="transform scale-125 md:scale-150">
-                {quizSet[questionIndex].visual.type === 'shape' && (
-                  <div className="w-24 h-24 rounded-full bg-yellow-400 border-4 border-white shadow-lg flex items-center justify-center text-3xl animate-yellow-pulse">😊</div>
-                )}
-                {quizSet[questionIndex].visual.type === 'emoji' && (
-                  <div className="text-8xl animate-bounce">{quizSet[questionIndex].visual.value}</div>
-                )}
-                {quizSet[questionIndex].visual.type === 'composition' && (
-                  <div className="flex gap-2 items-center text-6xl font-black">
-                    <span className={quizSet[questionIndex].visual.value === '▲▲' ? 'text-green-500' : 'text-blue-500'}>{quizSet[questionIndex].visual.value[0]}</span>
-                    <span className="text-2xl text-gray-300">+</span>
-                    <span className={quizSet[questionIndex].visual.value === '▲▲' ? 'text-green-500' : 'text-blue-500'}>{quizSet[questionIndex].visual.value[1]}</span>
-                  </div>
-                )}
-                {quizSet[questionIndex].visual.type === 'text' && (
-                  <div className="text-4xl font-black text-pink-400 animate-pulse">{quizSet[questionIndex].visual.value}</div>
-                )}
-              </div>
-            </div>
+            const allQuestions = [
+                { question: 'この 形の 名前は 何かな？', visual: { type: 'shape', value: 'circle' }, options: ['まる', 'さんかく', 'しかく', 'おほしさま'], answer: 'まる', hint: 'おつきさまや ドーナツと おなじだよ' },
+                { question: '「しかく」は どれかな？', visual: { type: 'text', value: 'どれかな？' }, options: ['△', '〇', '□', '☆'], answer: '□', hint: 'カドが 4つ あるものを さがしてね' },
+                { question: 'おにぎりと 同じ 形は どれかな？', visual: { type: 'emoji', value: '🍙' }, options: ['まる', 'さんかく', 'しかく', 'おはな'], answer: 'さんかく', hint: 'カドが 3つ あるよ' },
+                { question: 'さんかくを 2つ あわせると？', visual: { type: 'composition', value: '▲▲' }, options: ['まる', 'しかく', 'おほしさま', 'なみなみ'], answer: 'しかく', hint: 'サンドイッチを 2つ くっつけると…？' },
+                { question: 'ドーナツと 同じ 形は どれ？', visual: { type: 'emoji', value: '🍩' }, options: ['〇', '△', '□', '☆'], answer: '〇', hint: 'あなが あいた まるだね' },
+                { question: '「まる」は どれかな？', visual: { type: 'text', value: 'さがしてみてね' }, options: ['□', '△', '〇', '☆'], answer: '〇', hint: 'カドがない つるつるの 形だよ' },
+                { question: '「さんかく」を さがそう！', visual: { type: 'text', value: 'どれかな？' }, options: ['〇', '□', '☆', '△'], answer: '△', hint: 'ヨットの ほや、おやまの 形だよ' },
+                { question: 'テレビと 同じ 形は どれ？', visual: { type: 'emoji', value: '📺' }, options: ['しかく', 'まる', 'さんかく', 'おはな'], answer: 'しかく', hint: 'ま四角い かたちだね' },
+                { question: '「はんぶんの まる」は どれかな？', visual: { type: 'text', value: 'スイカの かたち' }, options: ['〇', 'D', '△', '□'], answer: 'D', hint: 'まるを まん中で きったよ' },
+                { question: 'しかくを 2つ つなげると？', visual: { type: 'composition', value: '■■' }, options: ['ながい しかく', 'まる', 'さんかく', 'ばつ'], answer: 'ながい しかく', hint: 'バスや でんしゃの かたちだね' }
+            ];
 
-            <div className="grid grid-cols-2 gap-4 md:gap-6">
-              {quizSet[questionIndex].options.map((opt, idx) => (
-                <button 
-                  key={idx} 
-                  onClick={() => handleAnswer(opt)} 
-                  disabled={isLocked}
-                  className={`py-6 md:py-8 px-2 rounded-[1.5rem] md:rounded-[2rem] text-2xl md:text-3xl font-black shadow-[0_6px_0_rgba(0,0,0,0.1)] transform active:translate-y-1 active:shadow-none transition-all border-4 border-white text-white
-                    ${idx === 0 ? 'bg-green-400' : idx === 1 ? 'bg-orange-400' : idx === 2 ? 'bg-purple-400' : 'bg-sky-400'} 
-                    ${isLocked ? 'opacity-50' : 'hover:brightness-105'}`}
-                >
-                  {opt}
-                </button>
-              ))}
-            </div>
+            const playSound = useCallback((type) => {
+                try {
+                    const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+                    const oscillator = audioCtx.createOscillator();
+                    const gainNode = audioCtx.createGain();
+                    oscillator.connect(gainNode);
+                    gainNode.connect(audioCtx.destination);
+                    if (type === 'correct') {
+                        oscillator.frequency.setValueAtTime(523.25, audioCtx.currentTime);
+                        oscillator.frequency.exponentialRampToValueAtTime(880, audioCtx.currentTime + 0.1);
+                        gainNode.gain.setValueAtTime(0.3, audioCtx.currentTime);
+                    } else if (type === 'incorrect') {
+                        oscillator.frequency.setValueAtTime(200, audioCtx.currentTime);
+                        gainNode.gain.setValueAtTime(0.2, audioCtx.currentTime);
+                    }
+                    oscillator.start();
+                    oscillator.stop(audioCtx.currentTime + 0.3);
+                } catch (e) {}
+            }, []);
 
-            {/* フィードバック (⭕/❌) */}
-            {feedback && (
-              <div className="absolute inset-0 flex items-center justify-center bg-white bg-opacity-90 z-20 rounded-[2.5rem] animate-in fade-in zoom-in duration-300">
-                <div className={`text-center ${feedback === 'correct' ? 'animate-bounce' : 'animate-shake'}`}>
-                  <div className="text-[10rem] md:text-[12rem] drop-shadow-xl">{feedback === 'correct' ? '⭕' : '❌'}</div>
-                  <p className={`text-5xl font-black ${feedback === 'correct' ? 'text-pink-500' : 'text-blue-500'}`}>
-                    {feedback === 'correct' ? 'せいかい！！' : 'おしい！'}
-                  </p>
+            const startNewQuiz = () => {
+                const shuffled = [...allQuestions].sort(() => Math.random() - 0.5);
+                setQuizSet(shuffled.slice(0, 5));
+                setQuestionIndex(0);
+                setScore(0);
+                setFeedback(null);
+                setIsLocked(false);
+                setShowHint(false);
+                setCurrentStep('quiz');
+            };
+
+            const handleAnswer = (option) => {
+                if (isLocked) return;
+                setIsLocked(true);
+                const isCorrect = option === quizSet[questionIndex].answer;
+                setFeedback(isCorrect ? 'correct' : 'incorrect');
+                playSound(isCorrect ? 'correct' : 'incorrect');
+                if (isCorrect) setScore(s => s + 1);
+
+                setTimeout(() => {
+                    setFeedback(null);
+                    setShowHint(false);
+                    if (questionIndex < 4) {
+                        setQuestionIndex(i => i + 1);
+                        setIsLocked(false);
+                    } else {
+                        setCurrentStep('result');
+                    }
+                }, 1200);
+            };
+
+            return (
+                <div className="min-h-screen bg-sky-200 flex flex-col items-center justify-center p-4 font-sans text-gray-800 relative overflow-hidden">
+                    <div className="absolute top-[10%] left-[5%] text-6xl animate-float opacity-50">😊🟡</div>
+                    <div className="absolute top-[20%] right-[10%] text-6xl animate-float-delayed opacity-50">😊🟥</div>
+                    <div className="absolute bottom-[15%] left-[10%] text-6xl animate-float opacity-50">😊🔺</div>
+
+                    <div className="w-full max-w-2xl bg-yellow-50 rounded-[3rem] shadow-2xl overflow-hidden border-[10px] border-white relative z-10">
+                        {currentStep === 'start' && (
+                            <div className="p-8 md:p-12 text-center space-y-8">
+                                <h1 className="text-4xl md:text-6xl font-black text-pink-500 tracking-tight">たのしい図形クイズ</h1>
+                                <p className="text-2xl md:text-3xl font-bold text-sky-500">まる・さんかく・しかく</p>
+                                <div className="bg-white rounded-full p-10 shadow-inner border-4 border-dashed border-sky-300 inline-block">
+                                    <div className="text-8xl animate-bounce">😊🟡</div>
+                                </div>
+                                <div>
+                                    <button onClick={startNewQuiz} className="bg-orange-400 hover:bg-orange-500 text-white text-3xl md:text-4xl font-black py-6 px-12 rounded-full shadow-[0_8px_0_rgb(194,120,0)] transform active:translate-y-2 transition-all">はじめる！</button>
+                                </div>
+                            </div>
+                        )}
+
+                        {currentStep === 'quiz' && (
+                            <div className="p-6 md:p-8 relative">
+                                <div className="flex justify-between items-center mb-4 px-2 font-bold text-blue-400 text-xl">
+                                    <span>{questionIndex + 1} / 5</span>
+                                </div>
+
+                                <div className="bg-white rounded-[2rem] p-6 shadow-md mb-6 border-4 border-sky-100 text-center relative">
+                                    <h2 className="text-2xl md:text-3xl font-bold leading-tight text-blue-700">{quizSet[questionIndex].question}</h2>
+                                    <button onClick={() => setShowHint(!showHint)} className="absolute -top-4 -right-2 p-2 bg-white text-yellow-400 rounded-full shadow-lg border border-yellow-100">
+                                        <LightbulbIcon />
+                                    </button>
+                                </div>
+
+                                {showHint && <div className="mb-4 bg-yellow-100 border-2 border-yellow-200 p-3 rounded-2xl text-center text-yellow-700 font-bold">💡 {quizSet[questionIndex].hint}</div>}
+
+                                <div className="flex justify-center mb-8 h-40 md:h-52 items-center bg-white bg-opacity-60 rounded-3xl border-4 border-white">
+                                    <div className="transform scale-125 md:scale-150">
+                                        {quizSet[questionIndex].visual.type === 'shape' && <div className="w-24 h-24 rounded-full bg-yellow-400 border-4 border-white shadow-lg flex items-center justify-center text-3xl animate-yellow-pulse">😊</div>}
+                                        {quizSet[questionIndex].visual.type === 'emoji' && <div className="text-8xl animate-bounce">{quizSet[questionIndex].visual.value}</div>}
+                                        {quizSet[questionIndex].visual.type === 'composition' && <div className="flex gap-2 items-center text-6xl font-black"><span className="text-blue-500">{quizSet[questionIndex].visual.value[0]}</span><span className="text-2xl text-gray-300">+</span><span className="text-blue-500">{quizSet[questionIndex].visual.value[1]}</span></div>}
+                                        {quizSet[questionIndex].visual.type === 'text' && <div className="text-4xl font-black text-pink-400 animate-pulse">{quizSet[questionIndex].visual.value}</div>}
+                                    </div>
+                                </div>
+
+                                <div className="grid grid-cols-2 gap-4 md:gap-6">
+                                    {quizSet[questionIndex].options.map((opt, idx) => (
+                                        <button key={idx} onClick={() => handleAnswer(opt)} disabled={isLocked} className={`py-6 md:py-8 px-2 rounded-[1.5rem] md:rounded-[2rem] text-2xl md:text-3xl font-black text-white shadow-[0_6px_0_rgba(0,0,0,0.1)] transform active:translate-y-1 transition-all border-4 border-white ${idx === 0 ? 'bg-green-400' : idx === 1 ? 'bg-orange-400' : idx === 2 ? 'bg-purple-400' : 'bg-sky-400'} ${isLocked ? 'opacity-50' : 'hover:brightness-105'}`}>{opt}</button>
+                                    ))}
+                                </div>
+
+                                {feedback && (
+                                    <div className="absolute inset-0 flex items-center justify-center bg-white bg-opacity-90 z-20 rounded-[2.5rem]">
+                                        <div className={`text-center ${feedback === 'correct' ? 'animate-bounce' : 'animate-shake'}`}>
+                                            <div className="text-[10rem] md:text-[12rem]">{feedback === 'correct' ? '⭕' : '❌'}</div>
+                                            <p className={`text-5xl font-black ${feedback === 'correct' ? 'text-pink-500' : 'text-blue-500'}`}>{feedback === 'correct' ? 'せいかい！！' : 'おしい！'}</p>
+                                        </div>
+                                    </div>
+                                )}
+                            </div>
+                        )}
+
+                        {currentStep === 'result' && (
+                            <div className="p-10 text-center space-y-8 bg-white">
+                                <TrophyIcon />
+                                <h2 className="text-4xl md:text-5xl font-black text-blue-600">やったね！</h2>
+                                <div className="bg-yellow-50 p-8 rounded-[2.5rem] border-4 border-yellow-200">
+                                    <p className="text-6xl md:text-7xl font-black text-pink-500">{score} / 5</p>
+                                    <p className="text-xl md:text-2xl font-bold text-gray-500 mt-2">ぜんぶ できたよ！</p>
+                                </div>
+                                <button onClick={() => setCurrentStep('start')} className="bg-sky-500 hover:bg-sky-600 text-white text-2xl md:text-3xl font-black py-5 px-10 rounded-full shadow-[0_8px_0_rgb(3,105,161)] transition-all flex items-center gap-4 mx-auto justify-center">もういちど <RefreshIcon /></button>
+                            </div>
+                        )}
+                    </div>
                 </div>
-              </div>
-            )}
-          </div>
-        )}
+            );
+        };
 
-        {/* 結果画面 */}
-        {currentStep === 'result' && (
-          <div className="p-10 text-center space-y-8 bg-white">
-            <div className="flex justify-center relative">
-              <Trophy size={120} className="text-yellow-400 animate-yellow-pulse" />
-              <div className="absolute -top-4 -right-4 text-5xl animate-ping">✨</div>
-            </div>
-            <h2 className="text-4xl md:text-5xl font-black text-blue-600">やったね！</h2>
-            <div className="bg-yellow-50 p-8 rounded-[2.5rem] border-4 border-yellow-200">
-              <p className="text-6xl md:text-7xl font-black text-pink-500">{score} / 5</p>
-              <p className="text-xl md:text-2xl font-bold text-gray-500 mt-2">ぜんぶ できたよ！</p>
-            </div>
-            <button 
-              onClick={() => setCurrentStep('start')} 
-              className="bg-sky-500 hover:bg-sky-600 text-white text-2xl md:text-3xl font-black py-5 px-10 rounded-full shadow-[0_8px_0_rgb(3,105,161)] transition-all flex items-center gap-4 mx-auto"
-            >
-              もういちど <RefreshCcw size={32} />
-            </button>
-          </div>
-        )}
-      </div>
-
-      <div className="mt-8 flex items-center gap-3 bg-white bg-opacity-60 px-6 py-2 rounded-full shadow-sm border border-white">
-        <Volume2 className="text-blue-500" />
-        <span className="font-bold text-blue-600">おとが なるよ！</span>
-      </div>
-    </div>
-  );
-};
-
-export default App;
+        const root = ReactDOM.createRoot(document.getElementById('root'));
+        root.render(<App />);
+    </script>
+</body>
+</html>
