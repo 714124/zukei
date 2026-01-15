@@ -1,356 +1,112 @@
-import React, { useState, useEffect } from 'react';
-import { Trophy, Star, ArrowRight, RefreshCcw, Volume2, HelpCircle } from 'lucide-react';
-
-const App = () => {
-  const [currentStep, setCurrentStep] = useState('start'); 
-  const [quizSet, setQuizSet] = useState([]);
-  const [questionIndex, setQuestionIndex] = useState(0);
-  const [score, setScore] = useState(0);
-  const [feedback, setFeedback] = useState(null); 
-  const [isLocked, setIsLocked] = useState(false);
-
-  // 全問題のリスト
-  const allQuestions = [
+{
+  "questions": [
     {
-      question: 'この 形の 名前は 何かな？',
-      visual: { type: 'shape', value: 'circle' },
-      options: ['まる', 'さんかく', 'しかく', 'おほしさま'],
-      answer: 'まる',
-      hint: 'ころころ ころがるよ'
+      "questionNumber": 1,
+      "question": "この 形の 名前は 何かな？\n😊🟡",
+      "answerOptions": [
+        {
+          "text": "まる",
+          "rationale": "かどがなくて、ころころ転がるような形を「まる」と呼びます。",
+          "isCorrect": true
+        },
+        {
+          "text": "しかく",
+          "rationale": "しかくには4つの角がありますが、この形には角がありません。",
+          "isCorrect": false
+        },
+        {
+          "text": "さんかく",
+          "rationale": "さんかくには3つの角がありますが、この形には角がありません。",
+          "isCorrect": false
+        }
+      ],
+      "hint": "お月様や、ドーナツと同じ形だよ。"
     },
     {
-      question: '「しかく」は どれかな？',
-      visual: { type: 'text', value: 'どれかな？' },
-      options: ['△', '〇', '□', '☆'],
-      answer: '□',
-      hint: 'カドが 4つ あるよ'
+      "questionNumber": 2,
+      "question": "「さんかく」を 2つ あわせると どんな 形に なるかな？\n▲ + ▲",
+      "answerOptions": [
+        {
+          "text": "まる",
+          "rationale": "さんかくを合わせても、丸いカーブは作れません。",
+          "isCorrect": false
+        },
+        {
+          "text": "しかく",
+          "rationale": "同じ大きさのさんかくを合わせると、しかく（正方形や長方形）になります。",
+          "isCorrect": true
+        },
+        {
+          "text": "おほしさま",
+          "rationale": "お星様を作るには、もっとたくさんのさんかくが必要です。",
+          "isCorrect": false
+        }
+      ],
+      "hint": "サンドイッチを2つ合わせると、どんな形になるか想像してみて。"
     },
     {
-      question: 'おにぎりと 同じ 形は どれかな？',
-      visual: { type: 'emoji', value: '🍙' },
-      options: ['まる', 'さんかく', 'しかく', 'おはな'],
-      answer: 'さんかく',
-      hint: 'カドが 3つ あるよ'
+      "questionNumber": 3,
+      "question": "しかくを 2つ つなげると どんな 形に なるかな？\n■ + ■",
+      "answerOptions": [
+        {
+          "text": "ながい しかく",
+          "rationale": "四角をつなげると、電車やバスのような横に長い形になります。",
+          "isCorrect": true
+        },
+        {
+          "text": "まる",
+          "rationale": "四角をつなげても、丸い形にはなりません。",
+          "isCorrect": false
+        },
+        {
+          "text": "さんかく",
+          "rationale": "四角を合わせても、角が3つの三角にはなりません。",
+          "isCorrect": false
+        }
+      ],
+      "hint": "バスや 電車の かたちを 思い出してごらん。"
     },
     {
-      question: 'さんかくを 2つ あわせると？',
-      visual: { type: 'composition', value: '▲▲' },
-      options: ['まる', 'しかく', 'おほしさま', 'なみなみ'],
-      answer: 'しかく',
-      hint: 'サンドイッチを 2つくっつけると…？'
+      "questionNumber": 4,
+      "question": "「まる」を まん中で 半分に 切ると、どんな 形に なる？\n🍕",
+      "answerOptions": [
+        {
+          "text": "さんかく",
+          "rationale": "まっすぐ切っても、尖った角が3つにはなりません。",
+          "isCorrect": false
+        },
+        {
+          "text": "はんぶんの まる",
+          "rationale": "丸を半分に切ると、スイカを切ったような「半円（はんえん）」になります。",
+          "isCorrect": true
+        },
+        {
+          "text": "しかく",
+          "rationale": "丸い部分が残るので、四角にはなりません。",
+          "isCorrect": false
+        }
+      ],
+      "hint": "半分に切ったスイカの形を思い出して。"
     },
     {
-      question: 'ドーナツと 同じ 形は どれ？',
-      visual: { type: 'emoji', value: '🍩' },
-      options: ['〇', '△', '□', '☆'],
-      answer: '〇',
-      hint: 'あなが あいた まるだよ'
-    },
-    {
-      question: '「まる」は どれかな？',
-      visual: { type: 'text', value: 'さがしてみてね' },
-      options: ['□', '△', '〇', '☆'],
-      answer: '〇',
-      hint: 'カドがない つるつるの形だよ'
-    },
-    {
-      question: '「さんかく」を さがそう！',
-      visual: { type: 'text', value: 'どれかな？' },
-      options: ['〇', '□', '☆', '△'],
-      answer: '△',
-      hint: 'カドが 3つ あるよ'
-    },
-    {
-      question: 'テレビと 同じ 形は どれ？',
-      visual: { type: 'emoji', value: '📺' },
-      options: ['しかく', 'まる', 'さんかく', 'おはな'],
-      answer: 'しかく',
-      hint: 'ま四角い かたちだね'
-    },
-    {
-      question: '「はんぶんの まる」は どれかな？',
-      visual: { type: 'text', value: 'スイカの かたち' },
-      options: ['〇', 'D', '△', '□'],
-      answer: 'D',
-      hint: 'まるを まん中で きったよ'
-    },
-    {
-      question: 'しかくを 2つ つなげると？',
-      visual: { type: 'composition', value: '■■' },
-      options: ['ながい しかく', 'まる', 'さんかく', 'ばつ'],
-      answer: 'ながい しかく',
-      hint: 'バスや でんしゃの かたちだね'
+      "questionNumber": 5,
+      "question": "おにぎりと 同じ 形は どれかな？",
+      "answerOptions": [
+        {
+          "text": "まる",
+          "isCorrect": false
+        },
+        {
+          "text": "しかく",
+          "isCorrect": false
+        },
+        {
+          "text": "さんかく",
+          "rationale": "おにぎりは角が3つある「さんかく」の仲間だね。",
+          "isCorrect": true
+        }
+      ],
+      "hint": "カチ、カチ、カチと角を数えてみて。"
     }
-  ];
-
-  // 問題をランダムに選んでシャッフルする関数
-  const startNewQuiz = () => {
-    playSound('click');
-    const shuffled = [...allQuestions].sort(() => Math.random() - 0.5);
-    const selected = shuffled.slice(0, 5); // 毎回5問選ぶ
-    setQuizSet(selected);
-    setQuestionIndex(0);
-    setScore(0);
-    setFeedback(null);
-    setIsLocked(false);
-    setCurrentStep('quiz');
-  };
-
-  const playSound = (type) => {
-    const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-    const oscillator = audioCtx.createOscillator();
-    const gainNode = audioCtx.createGain();
-
-    oscillator.connect(gainNode);
-    gainNode.connect(audioCtx.destination);
-
-    if (type === 'correct') {
-      oscillator.type = 'sine';
-      oscillator.frequency.setValueAtTime(523.25, audioCtx.currentTime); 
-      oscillator.frequency.exponentialRampToValueAtTime(880, audioCtx.currentTime + 0.1); 
-      gainNode.gain.setValueAtTime(0.5, audioCtx.currentTime);
-      gainNode.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.5);
-      oscillator.start();
-      oscillator.stop(audioCtx.currentTime + 0.5);
-    } else if (type === 'incorrect') {
-      oscillator.type = 'sawtooth';
-      oscillator.frequency.setValueAtTime(200, audioCtx.currentTime);
-      oscillator.frequency.linearRampToValueAtTime(150, audioCtx.currentTime + 0.3);
-      gainNode.gain.setValueAtTime(0.3, audioCtx.currentTime);
-      gainNode.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.4);
-      oscillator.start();
-      oscillator.stop(audioCtx.currentTime + 0.4);
-    } else {
-      oscillator.type = 'sine';
-      oscillator.frequency.setValueAtTime(440, audioCtx.currentTime);
-      gainNode.gain.setValueAtTime(0.1, audioCtx.currentTime);
-      gainNode.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.1);
-      oscillator.start();
-      oscillator.stop(audioCtx.currentTime + 0.1);
-    }
-  };
-
-  const handleAnswer = (option) => {
-    if (isLocked) return;
-    setIsLocked(true);
-
-    const isCorrect = option === quizSet[questionIndex].answer;
-    if (isCorrect) {
-      setScore(score + 1);
-      setFeedback('correct');
-      playSound('correct');
-    } else {
-      setFeedback('incorrect');
-      playSound('incorrect');
-    }
-
-    setTimeout(() => {
-      setFeedback(null);
-      if (questionIndex < quizSet.length - 1) {
-        setQuestionIndex(questionIndex + 1);
-        setIsLocked(false);
-      } else {
-        setCurrentStep('result');
-      }
-    }, 1500);
-  };
-
-  return (
-    <div className="min-h-screen bg-sky-200 flex flex-col items-center justify-center p-4 font-sans text-gray-800 relative overflow-hidden">
-      {/* 背景の装飾キャラクター（ふわふわ移動） */}
-      <div className="absolute top-[10%] left-[5%] text-6xl animate-float">😊🟡</div>
-      <div className="absolute top-[20%] right-[10%] text-6xl animate-float-delayed">😊🟥</div>
-      <div className="absolute bottom-[15%] left-[10%] text-6xl animate-float">😊🔺</div>
-      <div className="absolute bottom-[20%] right-[5%] text-6xl animate-float-delayed">✨</div>
-      <div className="absolute top-[40%] left-[2%] text-4xl opacity-50">☁️</div>
-      <div className="absolute top-[60%] right-[2%] text-4xl opacity-50">☁️</div>
-
-      {/* メインのコンテナ */}
-      <div className="w-full max-w-2xl bg-yellow-100 rounded-[3rem] shadow-2xl overflow-hidden border-[12px] border-white relative z-10">
-        
-        {/* スタート画面 */}
-        {currentStep === 'start' && (
-          <div className="p-10 text-center space-y-10">
-            <div className="space-y-2">
-              <h1 className="text-5xl md:text-6xl font-black text-pink-500 tracking-tighter drop-shadow-sm">
-                たのしい図形クイズ
-              </h1>
-              <p className="text-3xl font-bold text-sky-500">まる・さんかく・しかく</p>
-            </div>
-
-            <div className="bg-white rounded-full p-12 shadow-inner border-4 border-dashed border-sky-300 inline-block">
-               <div className="text-9xl animate-pulse">😊🟡</div>
-            </div>
-
-            <div>
-              <button
-                onClick={startNewQuiz}
-                className="bg-orange-400 hover:bg-orange-500 text-white text-4xl font-black py-8 px-16 rounded-full shadow-[0_10px_0_rgb(194,120,0)] transform active:translate-y-2 active:shadow-none transition-all inline-flex items-center gap-4"
-              >
-                はじめる！
-              </button>
-            </div>
-          </div>
-        )}
-
-        {/* クイズ画面 */}
-        {currentStep === 'quiz' && quizSet.length > 0 && (
-          <div className="p-6 md:p-8 relative">
-            {/* プログレスバー */}
-            <div className="flex justify-between items-center mb-4 px-4 font-bold text-blue-400">
-              <span>{questionIndex + 1} / 5</span>
-              <div className="flex gap-2">
-                {[...Array(5)].map((_, i) => (
-                  <div key={i} className={`w-4 h-4 rounded-full ${i <= questionIndex ? 'bg-orange-400' : 'bg-white'}`} />
-                ))}
-              </div>
-            </div>
-
-            {/* 雲のような問題枠 */}
-            <div className="bg-white rounded-[3rem] p-8 shadow-md mb-8 relative border-4 border-sky-100">
-              <h2 className="text-3xl md:text-4xl font-bold text-center leading-tight text-blue-700">
-                {quizSet[questionIndex].question}
-              </h2>
-            </div>
-
-            {/* 中央のビジュアルエリア */}
-            <div className="flex justify-center mb-10 h-48 items-center bg-white bg-opacity-50 rounded-3xl border-4 border-white">
-              {quizSet[questionIndex].visual.type === 'shape' && (
-                <div className="w-36 h-36 rounded-full bg-yellow-400 border-8 border-white shadow-lg flex items-center justify-center text-5xl animate-pulse">
-                  😊
-                </div>
-              )}
-              {quizSet[questionIndex].visual.type === 'composition' && (
-                <div className="flex gap-2 items-center animate-bounce">
-                   {quizSet[questionIndex].visual.value === '▲▲' ? (
-                     <>
-                      <span className="text-8xl text-green-500 drop-shadow-md">▲</span>
-                      <span className="text-4xl text-gray-400">+</span>
-                      <span className="text-8xl text-green-500 drop-shadow-md">▲</span>
-                     </>
-                   ) : (
-                     <>
-                      <span className="text-8xl text-blue-500 drop-shadow-md">■</span>
-                      <span className="text-4xl text-gray-400">+</span>
-                      <span className="text-8xl text-blue-500 drop-shadow-md">■</span>
-                     </>
-                   )}
-                </div>
-              )}
-              {quizSet[questionIndex].visual.type === 'emoji' && (
-                <div className="text-[10rem] drop-shadow-xl animate-bounce">
-                  {quizSet[questionIndex].visual.value}
-                </div>
-              )}
-              {quizSet[questionIndex].visual.type === 'text' && (
-                <div className="text-6xl font-black text-pink-400 animate-pulse">
-                  {quizSet[questionIndex].visual.value}
-                </div>
-              )}
-            </div>
-
-            {/* 選択肢ボタン */}
-            <div className="grid grid-cols-2 gap-6">
-              {quizSet[questionIndex].options.map((opt, idx) => (
-                <button
-                  key={idx}
-                  onClick={() => handleAnswer(opt)}
-                  disabled={isLocked}
-                  className={`
-                    py-8 px-4 rounded-[2rem] text-3xl font-black shadow-[0_8px_0_rgba(0,0,0,0.1)] transform active:translate-y-1 active:shadow-none transition-all border-4 border-white
-                    ${idx === 0 ? 'bg-green-400 text-white' : ''}
-                    ${idx === 1 ? 'bg-orange-400 text-white' : ''}
-                    ${idx === 2 ? 'bg-purple-400 text-white' : ''}
-                    ${idx === 3 ? 'bg-sky-400 text-white' : ''}
-                    ${isLocked ? 'opacity-50 cursor-not-allowed' : 'hover:brightness-105'}
-                  `}
-                >
-                  {opt}
-                </button>
-              ))}
-            </div>
-
-            {/* 正解・不正解アニメーション */}
-            {feedback && (
-              <div className="absolute inset-0 flex items-center justify-center bg-white bg-opacity-90 z-20 rounded-[2.5rem]">
-                {feedback === 'correct' ? (
-                  <div className="text-center animate-bounce">
-                    <div className="text-[12rem] leading-none mb-4">⭕</div>
-                    <p className="text-5xl font-black text-pink-500">せいかい！！</p>
-                  </div>
-                ) : (
-                  <div className="text-center animate-shake">
-                    <div className="text-[12rem] leading-none mb-4">❌</div>
-                    <p className="text-5xl font-black text-blue-500">おしい！</p>
-                  </div>
-                )}
-              </div>
-            )}
-          </div>
-        )}
-
-        {/* 結果画面 */}
-        {currentStep === 'result' && (
-          <div className="p-12 text-center space-y-10 bg-white">
-            <div className="flex justify-center relative">
-              <Trophy size={140} className="text-yellow-400 animate-yellow-pulse" />
-              <div className="absolute -top-4 -right-4 text-6xl animate-ping">✨</div>
-            </div>
-            <div className="space-y-4">
-              <h2 className="text-5xl font-black text-blue-600">
-                やったね！
-              </h2>
-              <div className="bg-yellow-100 p-8 rounded-[2.5rem] border-4 border-yellow-200">
-                <p className="text-7xl font-black text-pink-500">{score} / 5</p>
-                <p className="text-2xl font-bold text-gray-600 mt-2">ぜんぶ できたよ！</p>
-              </div>
-            </div>
-            
-            <button
-              onClick={() => setCurrentStep('start')}
-              className="bg-sky-500 hover:bg-sky-600 text-white text-3xl font-black py-6 px-12 rounded-full shadow-[0_8px_0_rgb(3,105,161)] transform active:translate-y-1 active:shadow-none transition-all inline-flex items-center gap-4"
-            >
-              もういちど <RefreshCcw size={32} />
-            </button>
-          </div>
-        )}
-      </div>
-
-      <div className="mt-8 flex items-center gap-4 bg-white bg-opacity-50 px-6 py-2 rounded-full shadow-sm">
-        <Volume2 size={24} className="text-blue-500" />
-        <span className="font-bold text-blue-600">おとが なるよ！</span>
-      </div>
-
-      <style dangerouslySetInnerHTML={{ __html: `
-        @keyframes float {
-          0%, 100% { transform: translateY(0) rotate(0); }
-          50% { transform: translateY(-20px) rotate(10deg); }
-        }
-        @keyframes float-delayed {
-          0%, 100% { transform: translateY(0) rotate(0); }
-          50% { transform: translateY(-20px) rotate(-10deg); }
-        }
-        .animate-float { animation: float 4s infinite ease-in-out; }
-        .animate-float-delayed { animation: float-delayed 5s infinite ease-in-out; animation-delay: 1s; }
-        
-        @keyframes yellow-pulse {
-          0%, 100% { transform: scale(1); filter: drop-shadow(0 0 0px #fbbf24); }
-          50% { transform: scale(1.1); filter: drop-shadow(0 0 30px #fbbf24); }
-        }
-        .animate-yellow-pulse {
-          animation: yellow-pulse 2s infinite ease-in-out;
-        }
-        @keyframes shake {
-          0%, 100% { transform: translateX(0); }
-          25% { transform: translateX(-15px); }
-          75% { transform: translateX(15px); }
-        }
-        .animate-shake {
-          animation: shake 0.15s infinite;
-        }
-      `}} />
-    </div>
-  );
-};
-
-export default App;
+  ]
+}
